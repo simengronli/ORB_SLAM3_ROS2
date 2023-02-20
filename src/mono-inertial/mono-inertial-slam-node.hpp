@@ -16,30 +16,41 @@
 
 #include "utility.hpp"
 
-class MonocularSlamNode : public rclcpp::Node
+class MonoInertialSlamNode : public rclcpp::Node
 {
 public:
-    MonocularSlamNode(ORB_SLAM3::System* pSLAM);
+    MonoInertialSlamNode(ORB_SLAM3::System* pSLAM);
 
-    ~MonocularSlamNode();
+    ~MonoInertialSlamNode();
 
 private:
     using ImageMsg = sensor_msgs::msg::Image;
 
-    void GrabImage(const sensor_msgs::msg::Image::SharedPtr msg);
+    void GrabImage(const ImageMsg::SharedPtr msg);
+    cv::Mat GetImage(const ImageMsg::SharedPtr msg);
+    void GrabImu(const ImuMsg::SharedPtr msg);
+    void SyncWithImu();
 
-    ORB_SLAM3::System* m_SLAM;
+    rclcpp::Subscription<ImageMsg>::SharedPtr m_image_subscriber;
+    rclcpp::Subscription<ImuMsg>::SharedPtr m_imu_subscriber;
 
-    cv_bridge::CvImagePtr m_cvImPtr;
+    queue<ImuMsg::SharedPtr> imu_queue;
+    std::mutex mutexImuQueue;
+    queue<ImageMsg::SharedPtr> image_queue;
+    std::mutex mutexImageQueue;
 
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr m_image_subscriber;
 
-    // Create a tf broadcaster to broadcast the camera pose
+    ORB_SLAM3::System *m_SLAM;
+    std::thread *syncThread;
+
+    // broadcast the camera pose tf
     void BroadcastCameraTransform(Sophus::SE3f Tcw);
     std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster_;
 
-    // create a static tf broadcaster to broadcast the telloBase_link to camera_link
+    // static telloBase_link to camera_link tf
     std::shared_ptr<tf2_ros::StaticTransformBroadcaster> m_static_tf_broadcaster_;
+
+
 
 
 };

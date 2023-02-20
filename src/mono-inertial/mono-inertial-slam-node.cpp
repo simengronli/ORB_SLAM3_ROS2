@@ -7,25 +7,33 @@
 
 using std::placeholders::_1;
 
-MonocularSlamNode::MonocularSlamNode(ORB_SLAM3::System* pSLAM)
+MonoInertialSlamNode::MonoInertialSlamNode(ORB_SLAM3::System* pSLAM)
 :   Node("ORB_SLAM3_ROS2")
 {
     m_SLAM = pSLAM;
     // std::cout << "slam changed" << std::endl;
     m_image_subscriber = this->create_subscription<ImageMsg>(
         "camera",
-        10,
-        std::bind(&MonocularSlamNode::GrabImage, this, std::placeholders::_1));
+        100,
+        std::bind(&MonoInertialSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
+
+    m_imu_subscriber = this->create_subscription<sensor_msgs::msg::Imu>(
+        "imu",
+        1000,
+        std::bind(&MonoInertialSlamNode::GrabImu, this, std::placeholders::_1));
+
 
     // Create a tf broadcaster to broadcast the camera pose
     m_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     
     // create a static tf broadcaster to broadcast the telloBase_link to camera_link
     m_static_tf_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(*this);
+
+    syncThread = new std::thread(&MonoInertialSlamNode::SyncWithImu, this);
 }
 
-MonocularSlamNode::~MonocularSlamNode()
+MonoInertialSlamNode::~MonoInertialSlamNode()
 {
     // Stop all threads
     m_SLAM->Shutdown();
@@ -34,27 +42,93 @@ MonocularSlamNode::~MonocularSlamNode()
     m_SLAM->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
 }
 
-void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
+void StereoInertialNode::GrabImu(const ImuMsg::SharedPtr msg)
 {
-    // Copy the ros image message to cv::Mat.
-    try
-    {
-        m_cvImPtr = cv_bridge::toCvCopy(msg);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    std::cout<<"one frame has been sent"<<std::endl;
-    // m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
-    // ------------------test------------------
-    Sophus::SE3f Tcw = m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
-    this->BroadcastCameraTransform(Tcw.inverse());
+    mutexImuQueue.lock();
+    imu_queue.push(msg);
+    mutexImuQueue.unlock();
 }
 
-void MonocularSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
+void StereoInertialNode::GrabImage(const ImageMsg::SharedPtr msg)
+{
+    mutexImageQueue.lock();
+
+    if (!image_queue.empty())
+        image_queue.pop();
+    image_queue.push(msg);
+
+    mutexImageQueue.unlock();
+}
+
+cv::Mat MonoInertialSlamNode::GetImage(const ImageMsg::SharedPtr msg){
+    // Copy the ros image message to cv::Mat.
+    cv_bridge::CvImageConstPtr cv_ptr;
+
+    try
+    {
+        cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::MONO8);
+    }
+    catch (cv_bridge::Exception &e)
+    {
+        RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
+    }
+
+    if (cv_ptr->image.type() == 0)
+    {
+        return cv_ptr->image.clone();
+    }
+    else
+    {
+        std::cerr << "Error image type" << std::endl;
+        return cv_ptr->image.clone();
+    }  
+}
+
+
+
+void MonoInertialSlamNode::SyncWithIMU(const ImageMsg::SharedPtr msg)
+{
+    while (1)
+    {
+        cv::Mat img;
+        double tImg = 0;
+        if (!image_queue.empty() && !imu_queue.empty())
+        {
+            tImg = Utility::StampToSec(image_queue.front()->header.stamp);
+
+        
+            mutexImageQueue.lock();
+            img = GetImage(image_queue.front());
+            image_queue.pop();
+            mutexImageQueue.unlock();
+
+            vector<ORB_SLAM3::IMU::Point> vImuMeas;
+            mutexImuQueue.lock();
+            if (!imu_queue.empty())
+            {
+                // Load imu measurements from buffer
+                vImuMeas.clear();
+                while (!imu_queue.empty() && Utility::StampToSec(imu_queue.front()->header.stamp) <= tImg)
+                {
+                    double t = Utility::StampToSec(imu_queue.front()->header.stamp);
+                    cv::Point3f acc(imu_queue.front()->linear_acceleration.x, imu_queue.front()->linear_acceleration.y, imu_queue.front()->linear_acceleration.z);
+                    cv::Point3f gyr(imu_queue.front()->angular_velocity.x, imu_queue.front()->angular_velocity.y, imu_queue.front()->angular_velocity.z);
+                    vImuMeas.push_back(ORB_SLAM3::IMU::Point(acc, gyr, t));
+                    imu_queue.pop();
+                }
+            }
+            mutexImuQueue.unlock();
+
+            Sophus::SE3f Tcw = m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp), vImuMeas);
+            this->BroadcastCameraTransform(Tcw.inverse());
+            
+            std::chrono::milliseconds tSleep(1);
+            std::this_thread::sleep_for(tSleep);
+        }
+    }
+}
+
+void MonoInertialSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
 {
     // Create a transform from the camera pose
     geometry_msgs::msg::TransformStamped transform_stamped;
