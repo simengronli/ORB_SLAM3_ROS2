@@ -42,14 +42,14 @@ MonoInertialSlamNode::~MonoInertialSlamNode()
     m_SLAM->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
 }
 
-void StereoInertialNode::GrabImu(const ImuMsg::SharedPtr msg)
+void MonoInertialSlamNode::GrabImu(const ImuMsg::SharedPtr msg)
 {
     mutexImuQueue.lock();
     imu_queue.push(msg);
     mutexImuQueue.unlock();
 }
 
-void StereoInertialNode::GrabImage(const ImageMsg::SharedPtr msg)
+void MonoInertialSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
 {
     mutexImageQueue.lock();
 
@@ -86,7 +86,7 @@ cv::Mat MonoInertialSlamNode::GetImage(const ImageMsg::SharedPtr msg){
 
 
 
-void MonoInertialSlamNode::SyncWithIMU(const ImageMsg::SharedPtr msg)
+void MonoInertialSlamNode::SyncWithIMU()
 {
     while (1)
     {

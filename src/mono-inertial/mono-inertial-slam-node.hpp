@@ -3,6 +3,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include <cv_bridge/cv_bridge.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -25,6 +26,7 @@ public:
 
 private:
     using ImageMsg = sensor_msgs::msg::Image;
+    using ImuMsg = sensor_msgs::msg::Imu;
 
     void GrabImage(const ImageMsg::SharedPtr msg);
     cv::Mat GetImage(const ImageMsg::SharedPtr msg);
