@@ -1,5 +1,4 @@
 #include "mono-inertial-slam-node.hpp"
-
 #include<opencv2/core/core.hpp>
 
 
@@ -14,12 +13,12 @@ MonoInertialSlamNode::MonoInertialSlamNode(ORB_SLAM3::System* pSLAM)
     // std::cout << "slam changed" << std::endl;
     m_image_subscriber = this->create_subscription<ImageMsg>(
         "camera",
-        100,
+        10,
         std::bind(&MonoInertialSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
 
     m_imu_subscriber = this->create_subscription<sensor_msgs::msg::Imu>(
-        "imu",
+        "/imu",
         1000,
         std::bind(&MonoInertialSlamNode::GrabImu, this, std::placeholders::_1));
 
@@ -86,7 +85,7 @@ cv::Mat MonoInertialSlamNode::GetImage(const ImageMsg::SharedPtr msg){
 
 
 
-void MonoInertialSlamNode::SyncWithIMU()
+void MonoInertialSlamNode::SyncWithImu()
 {
     while (1)
     {
@@ -119,7 +118,7 @@ void MonoInertialSlamNode::SyncWithIMU()
             }
             mutexImuQueue.unlock();
 
-            Sophus::SE3f Tcw = m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp), vImuMeas);
+            Sophus::SE3f Tcw = m_SLAM->TrackMonocular(img, tImg, vImuMeas);
             this->BroadcastCameraTransform(Tcw.inverse());
             
             std::chrono::milliseconds tSleep(1);
