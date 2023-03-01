@@ -17,6 +17,9 @@
 
 #include "utility.hpp"
 
+using ImageMsg = sensor_msgs::msg::Image;
+using ImuMsg = sensor_msgs::msg::Imu;
+
 class MonoInertialSlamNode : public rclcpp::Node
 {
 public:
@@ -25,8 +28,6 @@ public:
     ~MonoInertialSlamNode();
 
 private:
-    using ImageMsg = sensor_msgs::msg::Image;
-    using ImuMsg = sensor_msgs::msg::Imu;
 
     void GrabImage(const ImageMsg::SharedPtr msg);
     cv::Mat GetImage(const ImageMsg::SharedPtr msg);
