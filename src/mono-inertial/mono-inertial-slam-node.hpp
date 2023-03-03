@@ -22,8 +22,6 @@
 
 #include "utility.hpp"
 
-using ImageMsg = sensor_msgs::msg::Image;
-using ImuMsg = sensor_msgs::msg::Imu;
 
 class MonoInertialSlamNode : public rclcpp::Node
 {
@@ -33,42 +31,24 @@ public:
     ~MonoInertialSlamNode();
 
 private:
-
-    void GrabImage(const ImageMsg::SharedPtr msg);
-    cv::Mat GetImage(const ImageMsg::SharedPtr msg);
-    void GrabImu(const ImuMsg::SharedPtr msg);
-    void SyncWithImu();
+    using ImageMsg = sensor_msgs::msg::Image;
+    using ImuMsg = sensor_msgs::msg::Imu;
+    typedef message_filters::sync_policies::ApproximateTime<ImageMsg, ImuMsg> approximate_sync_policy;
+    
     void GrabMonoInertial(const ImageMsg::SharedPtr msgImage, const ImuMsg::SharedPtr msgImu);
 
-    // rclcpp::Subscription<ImageMsg>::SharedPtr m_image_subscriber;
-    // rclcpp::Subscription<ImuMsg>::SharedPtr m_imu_subscriber;
+    ORB_SLAM3::System *m_SLAM;
 
-    // message filter m_sync
-    typedef message_filters::sync_policies::ApproximateTime<ImageMsg, ImuMsg> approximate_sync_policy;
+    cv_bridge::CvImageConstPtr cv_ptr;
 
     std::shared_ptr<message_filters::Subscriber<ImageMsg>> image_subscriber;
     std::shared_ptr<message_filters::Subscriber<ImuMsg>> imu_subscriber;
+
     std::shared_ptr<message_filters::Synchronizer<approximate_sync_policy>> syncApproximate;
-
-    queue<ImuMsg::SharedPtr> imu_queue;
-    std::mutex mutexImuQueue;
-    queue<ImageMsg::SharedPtr> image_queue;
-    std::mutex mutexImageQueue;
-
-
-    ORB_SLAM3::System *m_SLAM;
-    std::thread *syncThread;
-
-    // broadcast the camera pose tf
+    
     void BroadcastCameraTransform(Sophus::SE3f Tcw);
     std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster_;
-
-    // static telloBase_link to camera_link tf
     std::shared_ptr<tf2_ros::StaticTransformBroadcaster> m_static_tf_broadcaster_;
-
-
-
-
 };
 
 #endif
