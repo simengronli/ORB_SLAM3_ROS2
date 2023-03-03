@@ -12,8 +12,8 @@ MonoInertialSlamNode::MonoInertialSlamNode(ORB_SLAM3::System* pSLAM)
     m_SLAM = pSLAM;
 
     // set subscriber qos profile
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-    qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+    rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
+    // qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
     auto qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile));
 
 
@@ -27,6 +27,8 @@ MonoInertialSlamNode::MonoInertialSlamNode(ORB_SLAM3::System* pSLAM)
         "imu/data_raw",
         qos,
         std::bind(&MonoInertialSlamNode::GrabImu, this, std::placeholders::_1));
+
+
 
 
     // Create a tf broadcaster to broadcast the camera pose
@@ -141,9 +143,9 @@ void MonoInertialSlamNode::SyncWithImu()
             // Sophus::SE3f Tcw = m_SLAM->TrackMonocular(img, tImg);
             this->BroadcastCameraTransform(Tcw);
             
-            std::chrono::milliseconds tSleep(1);
-            std::this_thread::sleep_for(tSleep);
         }
+        std::chrono::milliseconds tSleep(1);
+        std::this_thread::sleep_for(tSleep);
     }
 }
 
