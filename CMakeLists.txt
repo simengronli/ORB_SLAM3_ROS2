@@ -40,13 +40,13 @@ add_executable(mono
   src/monocular/mono.cpp
   src/monocular/monocular-slam-node.cpp
 )
-ament_target_dependencies(mono rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin tf2 tf2_ros)
+ament_target_dependencies(mono rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin tf2 tf2_ros message_filters)
 
 add_executable(mono-inertial
   src/mono-inertial/mono-inertial.cpp
   src/mono-inertial/mono-inertial-slam-node.cpp
 )
-ament_target_dependencies(mono-inertial rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin tf2 tf2_ros)
+ament_target_dependencies(mono-inertial rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin tf2 tf2_ros message_filters)
 
 
 add_executable(rgbd

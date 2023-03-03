@@ -10,6 +10,11 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+// include message_filters and sync_policies
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
+
 #include "System.h"
 #include "Frame.h"
 #include "Map.h"
@@ -33,9 +38,17 @@ private:
     cv::Mat GetImage(const ImageMsg::SharedPtr msg);
     void GrabImu(const ImuMsg::SharedPtr msg);
     void SyncWithImu();
+    void GrabMonoInertial(const ImageMsg::SharedPtr msgImage, const ImuMsg::SharedPtr msgImu);
 
-    rclcpp::Subscription<ImageMsg>::SharedPtr m_image_subscriber;
-    rclcpp::Subscription<ImuMsg>::SharedPtr m_imu_subscriber;
+    // rclcpp::Subscription<ImageMsg>::SharedPtr m_image_subscriber;
+    // rclcpp::Subscription<ImuMsg>::SharedPtr m_imu_subscriber;
+
+    // message filter m_sync
+    typedef message_filters::sync_policies::ApproximateTime<ImageMsg, ImuMsg> approximate_sync_policy;
+
+    std::shared_ptr<message_filters::Subscriber<ImageMsg>> image_subscriber;
+    std::shared_ptr<message_filters::Subscriber<ImuMsg>> imu_subscriber;
+    std::shared_ptr<message_filters::Synchronizer<approximate_sync_policy>> syncApproximate;
 
     queue<ImuMsg::SharedPtr> imu_queue;
     std::mutex mutexImuQueue;
