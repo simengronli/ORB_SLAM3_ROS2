@@ -11,25 +11,19 @@ MonoInertialSlamNode::MonoInertialSlamNode(ORB_SLAM3::System* pSLAM)
 {
     m_SLAM = pSLAM;
 
-    // set subscriber qos profile
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
-    // qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile));
-
+    // set subscriber qos profile best effort rclcpp::SensorDataQoS()
+    auto qos = rclcpp::SensorDataQoS();
 
     m_image_subscriber = this->create_subscription<ImageMsg>(
-        "camera",
+        "/tello/camera/image_synced",
         qos,
         std::bind(&MonoInertialSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
 
     m_imu_subscriber = this->create_subscription<ImuMsg>(
-        "imu/data_raw",
+        "/tello/imu/data_synced",
         qos,
         std::bind(&MonoInertialSlamNode::GrabImu, this, std::placeholders::_1));
-
-
-
 
     // Create a tf broadcaster to broadcast the camera pose
     m_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -51,7 +45,6 @@ MonoInertialSlamNode::~MonoInertialSlamNode()
 
 void MonoInertialSlamNode::GrabImu(const ImuMsg::SharedPtr msg)
 {
-    // std::cout << "imu received" << std::endl;
     mutexImuQueue.lock();
     imu_queue.push(msg);
     mutexImuQueue.unlock();
@@ -64,7 +57,6 @@ void MonoInertialSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
         image_queue.pop();
     }
     image_queue.push(msg);
-
     mutexImageQueue.unlock();
 }
 
@@ -96,7 +88,7 @@ cv::Mat MonoInertialSlamNode::GetImage(const ImageMsg::SharedPtr msg){
 
 void MonoInertialSlamNode::SyncWithImu()
 {
-    std::cout << "imu synchronisation thread started" << std::endl;
+    // std::cout << "imu synchronisation thread started" << std::endl;
     while (1)
     {
         cv::Mat img;
@@ -121,7 +113,7 @@ void MonoInertialSlamNode::SyncWithImu()
             {
                 // Load imu measurements from buffer
                 vImuMeas.clear();
-                while (!imu_queue.empty() && Utility::StampToSec(imu_queue.front()->header.stamp) <= tImg)
+                while (!imu_queue.empty() && Utility::StampToSec(imu_queue.front()->header.stamp) - this->time_shift <= tImg)
                 {   
                     // print imu time stamp and image time stamp
                     // std::cout<<"imu time stamp: "<<Utility::StampToSec(imu_queue.front()->header.stamp);
