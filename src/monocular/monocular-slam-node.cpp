@@ -47,7 +47,7 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
         return;
     }
 
-    std::cout<<"one frame has been sent"<<std::endl;
+    // std::cout<<"one frame has been sent"<<std::endl;
     // m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
     // ------------------test------------------
     Sophus::SE3f Tcw = m_SLAM->TrackMonocular(m_cvImPtr->image, Utility::StampToSec(msg->header.stamp));
@@ -57,6 +57,7 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
 void MonocularSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
 {
     Sophus::SE3f Twc = Tcw.inverse();
+
     Eigen::Vector3f t = Twc.translation();
     Eigen::Quaternionf q(Twc.rotationMatrix());
 
@@ -84,6 +85,7 @@ void MonocularSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
 
     // Rotate the IMU -90 degrees around the y axis relative to the camera
     Eigen::Quaternionf q_imu_rot = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitY()) * Eigen::Quaternionf::Identity();
+
 
     // Create a static transform from telloCamera to telloIMU
     geometry_msgs::msg::TransformStamped static_transform_stamped;
