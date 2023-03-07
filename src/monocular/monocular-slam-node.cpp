@@ -58,46 +58,47 @@ void MonocularSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
 {
     Sophus::SE3f Twc = Tcw.inverse();
 
-    // Create a transform from the camera pose
+    Eigen::Vector3f t = Twc.translation();
+    Eigen::Quaternionf q(Twc.rotationMatrix());
+
+    // Rotate the camera -90 degrees around the x axis, 90 degrees around the y axis
+    Eigen::Quaternionf q_cam_rot = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()) * Eigen::AngleAxisf(M_PI/2, Eigen::Vector3f::UnitY()) * Eigen::Quaternionf::Identity();
+
+    // Rotate the translation vector
+    t = q_cam_rot * t;
+
+    q_cam_rot = q_cam_rot * q;
+
+    // Create a transform from world to camera
     geometry_msgs::msg::TransformStamped transform_stamped;
     transform_stamped.header.stamp = rclcpp::Clock().now();
     transform_stamped.header.frame_id = "world";
     transform_stamped.child_frame_id = "telloCamera";
-
-    // Rotate Twc -90 degrees around the x axis
-    Eigen::Quaternionf q_rot = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()) * Eigen::Quaternionf::Identity();
-    Eigen::Quaternionf q_rotated = q_rot * Twc.unit_quaternion().cast<float>();
-    transform_stamped.transform.rotation.x = q_rotated.x();
-    transform_stamped.transform.rotation.y = q_rotated.y();
-    transform_stamped.transform.rotation.z = q_rotated.z();
-    transform_stamped.transform.rotation.w = q_rotated.w();
-
-    // Translate Twc
-    Eigen::Vector3f t_rotated = q_rot * Twc.translation().cast<float>();
-    transform_stamped.transform.translation.x = t_rotated.x();
-    transform_stamped.transform.translation.y = t_rotated.y();
-    transform_stamped.transform.translation.z = t_rotated.z();
-    
+    transform_stamped.transform.translation.x = t.x();
+    transform_stamped.transform.translation.y = t.y();
+    transform_stamped.transform.translation.z = t.z();
+    transform_stamped.transform.rotation.x = q_cam_rot.x();
+    transform_stamped.transform.rotation.y = q_cam_rot.y();
+    transform_stamped.transform.rotation.z = q_cam_rot.z();
+    transform_stamped.transform.rotation.w = q_cam_rot.w();
 
 
-    // Create a static transform from the telloBase_link to camera_link
+    // Rotate the IMU -90 degrees around the y axis relative to the camera
+    Eigen::Quaternionf q_imu_rot = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitY()) * Eigen::Quaternionf::Identity();
+
+
+    // Create a static transform from telloCamera to telloIMU
     geometry_msgs::msg::TransformStamped static_transform_stamped;
     static_transform_stamped.header.stamp = rclcpp::Clock().now();
     static_transform_stamped.header.frame_id = "telloCamera";
-    static_transform_stamped.child_frame_id = "telloIMU";    
-
-    // Make the transform to transform from camera_link to telloBase_link
+    static_transform_stamped.child_frame_id = "tellIMU";
     static_transform_stamped.transform.translation.x = 0.0;
-    static_transform_stamped.transform.translation.y = -0.028;
+    static_transform_stamped.transform.translation.y = -0.0028;
     static_transform_stamped.transform.translation.z = -0.043;
-
-    // Rotate the IMU -90 degrees around the y axis
-    Eigen::Quaternionf q_rot_imu = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitY()) * Eigen::Quaternionf::Identity();
-    static_transform_stamped.transform.rotation.x = q_rot_imu.x();
-    static_transform_stamped.transform.rotation.y = q_rot_imu.y();
-    static_transform_stamped.transform.rotation.z = q_rot_imu.z();
-    static_transform_stamped.transform.rotation.w = q_rot_imu.w();
-
+    static_transform_stamped.transform.rotation.x = q_imu_rot.x();
+    static_transform_stamped.transform.rotation.y = q_imu_rot.y();
+    static_transform_stamped.transform.rotation.z = q_imu_rot.z();
+    static_transform_stamped.transform.rotation.w = q_imu_rot.w();
 
     // Send the transform
     m_tf_broadcaster_->sendTransform(transform_stamped);

@@ -11,23 +11,19 @@ MonoInertialSlamNode::MonoInertialSlamNode(ORB_SLAM3::System* pSLAM)
 {
     m_SLAM = pSLAM;
 
-    // set subscriber qos profile
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
-    qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
-    auto qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile));
-
+    // set subscriber qos profile best effort rclcpp::SensorDataQoS()
+    auto qos = rclcpp::SensorDataQoS();
 
     m_image_subscriber = this->create_subscription<ImageMsg>(
-        "camera",
+        "/tello/camera/image_synced",
         qos,
         std::bind(&MonoInertialSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
 
     m_imu_subscriber = this->create_subscription<ImuMsg>(
-        "imu/data_raw",
+        "/tello/imu/data_synced",
         qos,
         std::bind(&MonoInertialSlamNode::GrabImu, this, std::placeholders::_1));
-
 
     // Create a tf broadcaster to broadcast the camera pose
     m_tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -49,7 +45,6 @@ MonoInertialSlamNode::~MonoInertialSlamNode()
 
 void MonoInertialSlamNode::GrabImu(const ImuMsg::SharedPtr msg)
 {
-    // std::cout << "imu received" << std::endl;
     mutexImuQueue.lock();
     imu_queue.push(msg);
     mutexImuQueue.unlock();
@@ -62,7 +57,6 @@ void MonoInertialSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
         image_queue.pop();
     }
     image_queue.push(msg);
-
     mutexImageQueue.unlock();
 }
 
@@ -94,7 +88,7 @@ cv::Mat MonoInertialSlamNode::GetImage(const ImageMsg::SharedPtr msg){
 
 void MonoInertialSlamNode::SyncWithImu()
 {
-    std::cout << "imu synchronisation thread started" << std::endl;
+    // std::cout << "imu synchronisation thread started" << std::endl;
     while (1)
     {
         cv::Mat img;
@@ -119,7 +113,7 @@ void MonoInertialSlamNode::SyncWithImu()
             {
                 // Load imu measurements from buffer
                 vImuMeas.clear();
-                while (!imu_queue.empty() && Utility::StampToSec(imu_queue.front()->header.stamp) <= tImg)
+                while (!imu_queue.empty() && Utility::StampToSec(imu_queue.front()->header.stamp) - this->time_shift <= tImg)
                 {   
                     // print imu time stamp and image time stamp
                     // std::cout<<"imu time stamp: "<<Utility::StampToSec(imu_queue.front()->header.stamp);
@@ -139,47 +133,57 @@ void MonoInertialSlamNode::SyncWithImu()
             // std::cout<<"one frame has been sent"<<std::endl;
             Sophus::SE3f Tcw = m_SLAM->TrackMonocular(img, tImg, vImuMeas);
             // Sophus::SE3f Tcw = m_SLAM->TrackMonocular(img, tImg);
-            this->BroadcastCameraTransform(Tcw.inverse());
+            this->BroadcastCameraTransform(Tcw);
             
-            std::chrono::milliseconds tSleep(1);
-            std::this_thread::sleep_for(tSleep);
         }
+        std::chrono::milliseconds tSleep(1);
+        std::this_thread::sleep_for(tSleep);
     }
 }
 
 void MonoInertialSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
 {
-    // Create a transform from the camera pose
+    Sophus::SE3f Twc = Tcw.inverse();
+    Eigen::Vector3f t = Twc.translation();
+    Eigen::Quaternionf q(Twc.rotationMatrix());
+
+    // Rotate the camera -90 degrees around the x axis, 90 degrees around the y axis
+    Eigen::Quaternionf q_cam_rot = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()) * Eigen::AngleAxisf(M_PI/2, Eigen::Vector3f::UnitY()) * Eigen::Quaternionf::Identity();
+
+    // Rotate the translation vector
+    t = q_cam_rot * t;
+
+    q_cam_rot = q_cam_rot * q;
+
+    // Create a transform from world to camera
     geometry_msgs::msg::TransformStamped transform_stamped;
     transform_stamped.header.stamp = rclcpp::Clock().now();
     transform_stamped.header.frame_id = "world";
     transform_stamped.child_frame_id = "telloCamera";
-
-    transform_stamped.transform.translation.x = Tcw.matrix()(0,3);
-    transform_stamped.transform.translation.y = Tcw.matrix()(1,3);
-    transform_stamped.transform.translation.z = Tcw.matrix()(2,3);
-
-    transform_stamped.transform.rotation.x = Tcw.unit_quaternion().x();
-    transform_stamped.transform.rotation.y = Tcw.unit_quaternion().y();
-    transform_stamped.transform.rotation.z = Tcw.unit_quaternion().z();
-    transform_stamped.transform.rotation.w = Tcw.unit_quaternion().w();
+    transform_stamped.transform.translation.x = t.x();
+    transform_stamped.transform.translation.y = t.y();
+    transform_stamped.transform.translation.z = t.z();
+    transform_stamped.transform.rotation.x = q_cam_rot.x();
+    transform_stamped.transform.rotation.y = q_cam_rot.y();
+    transform_stamped.transform.rotation.z = q_cam_rot.z();
+    transform_stamped.transform.rotation.w = q_cam_rot.w();
 
 
-    // Create a static transform from the telloBase_link to camera_link
+    // Rotate the IMU -90 degrees around the y axis relative to the camera
+    Eigen::Quaternionf q_imu_rot = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitY()) * Eigen::Quaternionf::Identity();
+
+    // Create a static transform from telloCamera to telloIMU
     geometry_msgs::msg::TransformStamped static_transform_stamped;
     static_transform_stamped.header.stamp = rclcpp::Clock().now();
     static_transform_stamped.header.frame_id = "telloCamera";
-    static_transform_stamped.child_frame_id = "telloBase";    
-
-    // Make the transform to transform from camera_link to telloBase_link
+    static_transform_stamped.child_frame_id = "tellIMU";
     static_transform_stamped.transform.translation.x = 0.0;
-    static_transform_stamped.transform.translation.y = 0.0;
-    static_transform_stamped.transform.translation.z = 0.0;
-
-    static_transform_stamped.transform.rotation.x = 0.5;
-    static_transform_stamped.transform.rotation.y = -0.5;
-    static_transform_stamped.transform.rotation.z = 0.5;
-    static_transform_stamped.transform.rotation.w = 0.5;
+    static_transform_stamped.transform.translation.y = -0.0028;
+    static_transform_stamped.transform.translation.z = -0.043;
+    static_transform_stamped.transform.rotation.x = q_imu_rot.x();
+    static_transform_stamped.transform.rotation.y = q_imu_rot.y();
+    static_transform_stamped.transform.rotation.z = q_imu_rot.z();
+    static_transform_stamped.transform.rotation.w = q_imu_rot.w();
 
     // Send the transform
     m_tf_broadcaster_->sendTransform(transform_stamped);
