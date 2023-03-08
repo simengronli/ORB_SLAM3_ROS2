@@ -113,7 +113,7 @@ void MonoInertialSlamNode::SyncWithImu()
             {
                 // Load imu measurements from buffer
                 vImuMeas.clear();
-                while (!imu_queue.empty() && Utility::StampToSec(imu_queue.front()->header.stamp) - this->time_shift <= tImg)
+                while (!imu_queue.empty() && Utility::StampToSec(imu_queue.front()->header.stamp) + this->time_shift <= tImg)
                 {   
                     // print imu time stamp and image time stamp
                     // std::cout<<"imu time stamp: "<<Utility::StampToSec(imu_queue.front()->header.stamp);

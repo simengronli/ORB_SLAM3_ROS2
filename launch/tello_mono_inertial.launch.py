@@ -21,7 +21,7 @@ def generate_launch_description():
              cmd=['ros2', 
                   'bag', 
                   'play', 
-                  '/home/isaac/Documents/ros2bag_tello/rosbag2_2023_03_08-11_43_20']),
+                  '/home/isaac/Documents/ros2bag_tello/rosbag2_2023_03_08-13_52_10']),
             
         Node(package='time_sync',
              executable='time_sync',
