@@ -1,20 +1,27 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import ExecuteProcess
 
 def generate_launch_description():
     return LaunchDescription([
-        Node(package='joy', 
-             executable='joy_node', 
-             output='screen'),
+     #    Node(package='joy', 
+     #         executable='joy_node', 
+     #         output='screen'),
 
-        Node(package='tello_driver', 
-             executable='tello_joy_main', 
-             output='screen'),
+     #    Node(package='tello_driver', 
+     #         executable='tello_joy_main', 
+     #         output='screen'),
 
-        Node(package='tello_driver', 
-             executable='tello_driver_main', 
-             output='screen', 
-             remappings=[('/image_raw','/tello/camera/image_raw')]),
+     #    Node(package='tello_driver', 
+     #         executable='tello_driver_main', 
+     #         output='screen', 
+     #         remappings=[('/image_raw','/tello/camera/image_raw')]),
+     # Launch node that plays a bag file
+        ExecuteProcess(
+             cmd=['ros2', 
+                  'bag', 
+                  'play', 
+                  '/home/isaac/Documents/ros2bag_tello/rosbag2_2023_03_08-11_43_20']),
             
         Node(package='time_sync',
              executable='time_sync',
