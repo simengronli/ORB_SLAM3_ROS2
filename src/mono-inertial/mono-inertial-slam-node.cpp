@@ -98,7 +98,7 @@ void MonoInertialSlamNode::SyncWithImu()
         // std::cout<<"imu queue size: "<<imu_queue.size()<<std::endl;
         if (!image_queue.empty() && !imu_queue.empty())
         {
-            tImg = Utility::StampToSec(image_queue.front()->header.stamp);
+            tImg = Utility::StampToSec(image_queue.front()->header.stamp) + this->time_shift;
             
 
         

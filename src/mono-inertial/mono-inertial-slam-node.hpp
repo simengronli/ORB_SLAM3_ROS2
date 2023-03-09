@@ -43,7 +43,8 @@ private:
     std::mutex mutexImageQueue;
 
 
-    float time_shift = -0.08702715681391279; // timeshift cam0 to imu0: [s] (t_imu = t_cam + shift)
+    // float time_shift = -0.08702715681391279; // timeshift cam0 to imu0: [s] (t_imu = t_cam + shift)
+    float time_shift = -0.09013516578250158; // timeshift cam0 to imu0: [s] (t_imu = t_cam + shift)
 
     ORB_SLAM3::System *m_SLAM;
     std::thread *syncThread;
