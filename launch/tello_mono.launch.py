@@ -23,14 +23,15 @@ def generate_launch_description():
      #              'play', 
      #              '/home/isaac/Documents/ros2bag_tello/rosbag2_2023_03_08-13_52_10']),
             
-     #    Node(package='time_sync',
-     #         executable='time_sync',
-     #         output='screen'),
+
+        Node(package='tello_control',
+             executable='tello_control',
+             output='screen'),
 
         Node(package='orbslam3', 
              executable='mono', 
              output='screen',
-             arguments=['/home/isaac/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/vocabulary/ORBvoc.txt', \
-                        '/home/isaac/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/config/monocular/TELLO.yaml'])
+             arguments=['/home/simen/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/vocabulary/ORBvoc.txt', \
+                        '/home/simen/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/config/monocular/TELLO.yaml'])
 
     ])

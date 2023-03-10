@@ -176,7 +176,7 @@ void MonoInertialSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
     geometry_msgs::msg::TransformStamped static_transform_stamped;
     static_transform_stamped.header.stamp = rclcpp::Clock().now();
     static_transform_stamped.header.frame_id = "telloCamera";
-    static_transform_stamped.child_frame_id = "tellIMU";
+    static_transform_stamped.child_frame_id = "telloIMU";
     static_transform_stamped.transform.translation.x = 0.0;
     static_transform_stamped.transform.translation.y = -0.0028;
     static_transform_stamped.transform.translation.z = -0.043;
