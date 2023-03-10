@@ -10,11 +10,14 @@ using std::placeholders::_1;
 MonocularSlamNode::MonocularSlamNode(ORB_SLAM3::System* pSLAM)
 :   Node("ORB_SLAM3_ROS2")
 {
+
+    // set subscriber qos profile best effort rclcpp::SensorDataQoS()
+    auto qos = rclcpp::SensorDataQoS();
     m_SLAM = pSLAM;
     // std::cout << "slam changed" << std::endl;
     m_image_subscriber = this->create_subscription<ImageMsg>(
-        "/tello/camera/image_synced",
-        10,
+        "/tello/camera/image_raw",
+        qos,
         std::bind(&MonocularSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
 
