@@ -29,6 +29,9 @@ def generate_launch_description():
         Node(package='tello_control',
              executable='tello_control',
              output='screen'),
+        Node(package='tello_control',
+             executable='tello_dynamics',
+             output='screen'),
 
         Node(package='orbslam3', 
              executable='mono', 
