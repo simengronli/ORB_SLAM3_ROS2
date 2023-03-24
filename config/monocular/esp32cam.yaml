@@ -1,38 +1,42 @@
 %YAML:1.0
 
 #--------------------------------------------------------------------------------------------
-# Camera Parameters. Adjust them!
+# Camera Parameters. JPEG_QUALITY=40, SVGA, XCLK=20MHz
 #--------------------------------------------------------------------------------------------
 Camera.type: "PinHole"
 
 # Camera calibration and distortion parameters (OpenCV) 
-Camera.fx: 912.889969
-Camera.fy: 907.140771
-Camera.cx: 479.014106
-Camera.cy: 348.791481
+Camera.fx: 851.428915
+Camera.fy: 851.594450 
+Camera.cx: 392.747672
+Camera.cy: 296.249843
 
-Camera.k1: -0.010773
-Camera.k2: 0.060342
-Camera.p1: -0.004326
-Camera.p2: -0.003056
-Camera.k3: 0.0
+Camera.k1: 0.366463
+Camera.k2: -1.146062
+Camera.p1: -0.006593
+Camera.p2: -0.004426
+
+
 
 # Camera frames per second 
-Camera.fps: 20.0
+Camera.fps: 8.0
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 0
 
-# Camera resolution
-Camera.width: 240
-Camera.height: 320
+# Image scale, it changes the image size to be processed (<1.0: reduce, >1.0: increase)
+Camera.imageScale: 1.0
+
+# Camera resolution 800x600
+Camera.width: 800
+Camera.height: 600
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 100
+ORBextractor.nFeatures: 1000
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
 ORBextractor.scaleFactor: 1.2
@@ -53,11 +57,13 @@ ORBextractor.minThFAST: 7
 Viewer.KeyFrameSize: 0.05
 Viewer.KeyFrameLineWidth: 1
 Viewer.GraphLineWidth: 0.9
-Viewer.PointSize:2
+Viewer.PointSize: 2
 Viewer.CameraSize: 0.08
 Viewer.CameraLineWidth: 3
 Viewer.ViewpointX: 0
 Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -1.8
 Viewer.ViewpointF: 500
+Viewer.imageViewScale: 1
+
 
