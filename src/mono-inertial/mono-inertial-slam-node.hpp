@@ -45,7 +45,9 @@ private:
 
     // float time_shift = -0.08702715681391279; // timeshift cam0 to imu0: [s] (t_imu = t_cam + shift)
     // float time_shift = -0.09013516578250158; // timeshift cam0 to imu0: [s] (t_imu = t_cam + shift)
-    float time_shift = -0.08992818704962957;
+    // float time_shift = -0.08992818704962957;
+    float time_shift = -0.12318331862311255; // esp32 cam/imu
+
     ORB_SLAM3::System *m_SLAM;
     std::thread *syncThread;
 

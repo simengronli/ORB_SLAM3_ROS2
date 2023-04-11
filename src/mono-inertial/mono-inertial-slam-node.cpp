@@ -15,13 +15,13 @@ MonoInertialSlamNode::MonoInertialSlamNode(ORB_SLAM3::System* pSLAM)
     auto qos = rclcpp::SensorDataQoS();
 
     m_image_subscriber = this->create_subscription<ImageMsg>(
-        "/tello/camera/image_synced",
+        "/tello/camera/image_raw",
         qos,
         std::bind(&MonoInertialSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;
 
     m_imu_subscriber = this->create_subscription<ImuMsg>(
-        "/tello/imu/data_synced",
+        "/tello/imu",
         qos,
         std::bind(&MonoInertialSlamNode::GrabImu, this, std::placeholders::_1));
 

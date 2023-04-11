@@ -16,7 +16,7 @@ MonocularSlamNode::MonocularSlamNode(ORB_SLAM3::System* pSLAM)
     m_SLAM = pSLAM;
     // std::cout << "slam changed" << std::endl;
     m_image_subscriber = this->create_subscription<ImageMsg>(
-        "/tello/camera/image_raw/right",
+        "/tello/camera/image_raw",
         qos,
         std::bind(&MonocularSlamNode::GrabImage, this, std::placeholders::_1));
     std::cout << "slam changed" << std::endl;

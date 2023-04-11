@@ -16,20 +16,33 @@ Camera.k2: -1.146062
 Camera.p1: -0.006593
 Camera.p2: -0.004426
 
-
-
 # Camera frames per second 
 Camera.fps: 10
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 0
 
-# Image scale, it changes the image size to be processed (<1.0: reduce, >1.0: increase)
-Camera.imageScale: 1.0
-
 # Camera resolution 800x600
 Camera.width: 800
 Camera.height: 600
+
+# Transformation from body-frame (imu) to camera
+Tbc: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: f
+
+  data: [-0.0477393, -0.99879821, -0.01109437, 0.00076445, 
+         -0.72820853, 0.02719926, 0.6848157, 0.00053641,
+         -0.68369094, 0.04077164, -0.72863185, 0.00008653,
+         0.0, 0.0, 0.0, 1.0]
+
+# IMU noise parameters
+IMU.NoiseGyro: 0.0002907488196208217
+IMU.NoiseAcc: 0.006610373541864706
+IMU.GyroWalk: 0.00010133331044509858
+IMU.AccWalk: 0.0008249390143765661
+IMU.Frequency: 100
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
