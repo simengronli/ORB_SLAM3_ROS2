@@ -26,12 +26,12 @@ def generate_launch_description():
             
 
         TimerAction(period=5.0, actions=[
-        Node(package='tello_control',
-             executable='tello_control',
-             output='screen'),
-        Node(package='tello_control',
-             executable='tello_dynamics',
-             output='screen'),
+     #    Node(package='tello_control',
+     #         executable='tello_control',
+     #         output='screen'),
+     #    Node(package='tello_control',
+     #         executable='tello_dynamics',
+     #         output='screen'),
 
         Node(package='orbslam3', 
              executable='mono', 
