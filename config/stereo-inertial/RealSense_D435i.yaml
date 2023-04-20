@@ -109,3 +109,6 @@ Viewer.ViewpointX: 0
 Viewer.ViewpointY: -0.7
 Viewer.ViewpointZ: -3.5
 Viewer.ViewpointF: 500
+
+System.SaveAtlasToFile: "atlas"
+# System.LoadAtlasFromFile: "atlas"

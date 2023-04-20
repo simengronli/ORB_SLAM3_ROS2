@@ -41,7 +41,7 @@ def generate_launch_description():
                             'enable_fisheye': False, 
                             'enable_infra1': True, 
                             'enable_infra2': True, 
-                            'enable_color': True,
+                            'depth_module.emitter_enabled': 0,
                             'emitter_enabled': 0}]),
 
 
@@ -53,6 +53,6 @@ def generate_launch_description():
              output='screen',
             #  remappings=[('/infra1/image_rect_raw','/camera/left'),('infra2/image_rect_raw','/camera/right' ), ('/imu','/imu')],
             #  remappings=[('/camera/left', '/camera/infra1/image_rect_raw'), ('/camera/right', '/camera/infra2/image_rect_raw'), ('/imu', '/imu')],
-             arguments=['/home/isaac/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/vocabulary/ORBvoc.txt', \
-                        '/home/isaac/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/config/stereo-inertial/RealSense_D435i.yaml'])])
+             arguments=['/home/simen/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/vocabulary/ORBvoc.txt', \
+                        '/home/simen/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/config/stereo-inertial/RealSense_D435i.yaml'])])
      ])
