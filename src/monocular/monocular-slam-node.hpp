@@ -37,11 +37,6 @@ private:
     // Create a tf broadcaster to broadcast the camera pose
     void BroadcastCameraTransform(Sophus::SE3f Tcw);
     std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster_;
-
-    // create a static tf broadcaster to broadcast the telloBase_link to camera_link
-    std::shared_ptr<tf2_ros::StaticTransformBroadcaster> m_static_tf_broadcaster_;
-
-
 };
 
 #endif
