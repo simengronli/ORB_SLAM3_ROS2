@@ -27,4 +27,5 @@ def generate_launch_description():
              executable='mono', 
              output='screen',
              arguments=['/home/simen/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/vocabulary/ORBvoc.txt', \
-                        '/home/simen/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/config/monocular/esp32cam.yaml'])])
+                        '/home/simen/git/project_autonomous/colcon_ws/src/ORB_SLAM3_ROS2/config/monocular/esp32cam.yaml'])
+        ])

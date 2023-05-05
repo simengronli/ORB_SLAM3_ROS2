@@ -75,7 +75,7 @@ void MonocularSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
     // Create a transform from world to camera
     geometry_msgs::msg::TransformStamped transform_stamped;
     transform_stamped.header.stamp = rclcpp::Clock().now();
-    transform_stamped.header.frame_id = "world";
+    transform_stamped.header.frame_id = "helipad";
     transform_stamped.child_frame_id = "orbslam_pose";
     transform_stamped.transform.translation.x = t.x();
     transform_stamped.transform.translation.y = t.y();
