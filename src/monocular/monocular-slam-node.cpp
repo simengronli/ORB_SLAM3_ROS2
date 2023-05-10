@@ -64,8 +64,8 @@ void MonocularSlamNode::BroadcastCameraTransform(Sophus::SE3f Tcw)
     // // Rotate the camera -90 degrees around the x axis, 90 degrees around the y axis
     // Eigen::Quaternionf q_cam_rot = Eigen::AngleAxisf(-M_PI/2, Eigen::Vector3f::UnitX()) * Eigen::AngleAxisf(M_PI/2, Eigen::Vector3f::UnitY()) * Eigen::Quaternionf::Identity();
     
-    // Rotate the camera 180 degrees around the x axis
-    Eigen::Quaternionf q_cam_rot = Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitX()) * Eigen::Quaternionf::Identity();
+    // Rotate the camera 90 degrees around the z axis
+    Eigen::Quaternionf q_cam_rot = Eigen::AngleAxisf(M_PI/2, Eigen::Vector3f::UnitZ()) * Eigen::Quaternionf::Identity();
 
     // Rotate the translation vector
     t = q_cam_rot * t;
