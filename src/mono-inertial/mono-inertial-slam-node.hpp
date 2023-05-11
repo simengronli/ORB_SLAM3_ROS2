@@ -56,9 +56,6 @@ private:
     void BroadcastCameraTransform(Sophus::SE3f Tcw);
     std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster_;
 
-    // static telloBase_link to camera_link tf
-    std::shared_ptr<tf2_ros::StaticTransformBroadcaster> m_static_tf_broadcaster_;
-
 
 
 
